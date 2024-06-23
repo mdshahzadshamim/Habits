@@ -23,6 +23,12 @@ int main()
         pqxx::result result = txn.exec("SELECT * FROM habits WHERE date_ymd = CURRENT_DATE");
         txn.commit();
 
+        pqxx::work txn_clean(conn);
+            txn_clean.exec("DELETE FROM habits WHERE discrete_maths = 0 AND leet_code_1 = 0 "
+                        "AND systems_design = 0 AND leet_code_2 = 0 AND computer_networks = 0 "
+                        "AND leet_code_3 = 0");
+            txn_clean.commit();
+
         if(result.empty())
         {
             pqxx::work txn1(conn);
@@ -39,7 +45,7 @@ int main()
 
             pqxx::work txnq(conn);
             pqxx::result resultq = txnq.exec("SELECT SUM(discrete_maths), SUM(leet_code_1), SUM(systems_design), "
-                                                    "SUM(leet_code_2), SUM(computer_networks), SUM(leet_code_3) FROM habits");
+                                        "SUM(leet_code_2), SUM(computer_networks), SUM(leet_code_3) FROM habits");
             txnq.commit();
 
             // SELECT SUM(discrete_maths), SUM(leet_code_1), SUM(systems_design), SUM(leet_code_2), SUM(cpp), SUM(leet_code_3) FROM habits;
