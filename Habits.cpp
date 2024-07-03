@@ -19,15 +19,15 @@ int main()
     {
         pqxx::connection conn("dbname=test user=postgres password=postgres port=5432");
 
-        pqxx::work txn(conn);
-        pqxx::result result = txn.exec("SELECT * FROM habits WHERE date_ymd = CURRENT_DATE");
-        txn.commit();
-
         pqxx::work txn_clean(conn);
             txn_clean.exec("DELETE FROM habits WHERE discrete_maths = 0 AND leet_code_1 = 0 "
                         "AND systems_design = 0 AND leet_code_2 = 0 AND computer_networks = 0 "
                         "AND leet_code_3 = 0");
             txn_clean.commit();
+
+        pqxx::work txn(conn);
+        pqxx::result result = txn.exec("SELECT * FROM habits WHERE date_ymd = CURRENT_DATE");
+        txn.commit();
 
         if(result.empty())
         {
@@ -85,6 +85,18 @@ int main()
             cout << setw(35) << left << "\t\t\t\t6 - LeetCode Day 3"        << setw(10) << left << sum6       << n6       << endl;
             cout << endl;
             cout << setw(35) << left << "\t\t\t\tX - LeetCode Total"        << setw(10) << left << sum2+sum4+sum6         << endl;
+
+
+            pqxx::work day_count(conn);
+            pqxx::result dc = day_count.exec("SELECT COUNT(date_ymd) FROM habits WHERE discrete_maths != 0 OR leet_code_1 != 0 "
+                        "OR systems_design != 0 OR leet_code_2 != 0 OR computer_networks != 0 "
+                        "OR leet_code_3 != 0");
+            day_count.commit();
+
+            int d_c = dc[0][0].as<int>();
+
+            cout << endl;
+            cout << setw(35) << left << "\t\t\t\tN - Days Total"            << setw(10) << left << d_c                    << endl;
 
             // Note - It's a personalized app so you need to change the habit names here 
             // And in the database, if you want to access it using sql directly
