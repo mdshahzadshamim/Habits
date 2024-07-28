@@ -63,33 +63,39 @@ int main()
 
         while (repeat != 'n')
         {
-            pqxx::work txnq(conn);
-            pqxx::result resultq = txnq.exec("SELECT SUM(discrete_maths), SUM(leet_code_1), SUM(systems_design), "
-                                             "SUM(leet_code_2), SUM(computer_networks), SUM(leet_code_3), SUM(full_stack), SUM(algorithms) FROM habits");
-            txnq.commit();
-
             vector<int> sum;
-            if (!resultq.empty())
+            for (int i = 1; i < column; i++)
             {
-                const pqxx::row &row = resultq[0];
-                for (pqxx::row::size_type col = 0; col < row.size(); ++col)
-                    sum.push_back(row[col].as<int>());
+                pqxx::work txnq(conn);
+                pqxx::result resultq = txnq.exec_params("SELECT SUM($1) FROM habits", column_name[i]);
+                txnq.commit();
+
+                if (!resultq.empty())
+                {
+                    int temp = resultq[0][0].as<int>();
+                    sum.push_back(temp);
+                }
             }
             sum[0] += 22; // Previous Streak
 
             // -----------------------------streak counts extraction
 
-            pqxx::work txnc(conn);
-            pqxx::result resultc = txnc.exec("SELECT discrete_maths, leet_code_1, systems_design, leet_code_2, "
-                                             "computer_networks, leet_code_3, full_stack, algorithms FROM habits WHERE date_ymd = CURRENT_DATE");
-            txnc.commit();
-
             vector<int> n;
-            if (!resultc.empty())
+            for (int i = 1; i < column; i++)
             {
-                const pqxx::row &row = resultc[0];
-                for (pqxx::row::size_type col = 0; col < row.size(); ++col)
-                    n.push_back(row[col].as<int>());
+                pqxx::work txnc(conn);
+                pqxx::result resultc = txnc.exec_params("SELECT $1 FROM habits WHERE date_ymd = CURRENT_DATE", column_name[i]);
+                txnc.commit();
+
+                if (!resultc.empty())
+                {
+                    int temp = resultc[0][0].as<int>();
+                    n.push_back(temp);
+                }
+
+                // const pqxx::row &row = resultc[0];
+                //     for (pqxx::row::size_type col = 0; col < row.size(); ++col)
+                //         n.push_back(row[col].as<int>());
             }
 
             // -----------------------------today's data extraction

@@ -13,7 +13,7 @@ include_directories("C:/Program Files/libpqxx/include" "C:/Program Files/Postgre
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:MSVCRT")
 
-add_executable(Habits Habits.cpp)
+add_executable(Habits Habits.cpp Functions.cpp)
 
 # Find and link against libpqxx
 find_package(Libpqxx REQUIRED)
