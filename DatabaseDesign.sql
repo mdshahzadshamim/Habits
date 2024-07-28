@@ -11,8 +11,3 @@ CREATE TABLE habits
     algorithms          SMALLINT DEFAULT 0 CHECK (algorithms            BETWEEN 0 AND 1);
 );
 
-
-SELECT discrete_maths, leet_code_1, systems_design, leet_code_2, computer_networks, leet_code_3 FROM habits WHERE date_ymd = CURRENT_DATE;
-
-
-

@@ -57,46 +57,55 @@ int main()
             pqxx::work txn1(conn);
             txn1.exec("INSERT INTO habits (date_ymd) VALUES (CURRENT_DATE)");
             txn1.commit();
-
         }
         // -----------------------------initialization through current date
 
         while (repeat != 'n')
         {
-            pqxx::work txnq(conn);
-            pqxx::result resultq = txnq.exec("SELECT SUM(discrete_maths), SUM(leet_code_1), SUM(systems_design), "
-                                             "SUM(leet_code_2), SUM(computer_networks), SUM(leet_code_3), SUM(full_stack), SUM(algorithms) FROM habits");
-            txnq.commit();
-
-            vector<int> sum;
-            if (!resultq.empty())
+            std::vector<int> sum;
+            for (size_t i = 1; i < column_name.size(); ++i)
             {
-                const pqxx::row &row = resultq[0];
-                for (pqxx::row::size_type col = 0; col < row.size(); ++col)
-                    sum.push_back(row[col].as<int>());
+                const auto &col = column_name[i];
+                
+                std::string query = "SELECT SUM(" + col + ") FROM habits";
+                
+                pqxx::work txnq(conn);
+                pqxx::result resultq = txnq.exec(query);
+                txnq.commit();
+
+                if (!resultq.empty() && !resultq[0][0].is_null())
+                {
+                    int temp = resultq[0][0].as<int>();
+                    sum.push_back(temp);
+                }
             }
             sum[0] += 22; // Previous Streak
 
             // -----------------------------streak counts extraction
 
-            pqxx::work txnc(conn);
-            pqxx::result resultc = txnc.exec("SELECT discrete_maths, leet_code_1, systems_design, leet_code_2, "
-                                             "computer_networks, leet_code_3, full_stack, algorithms FROM habits WHERE date_ymd = CURRENT_DATE");
-            txnc.commit();
-
             vector<int> n;
-            if (!resultc.empty())
+            for (size_t i = 1; i < column_name.size(); ++i)
             {
-                const pqxx::row &row = resultc[0];
-                for (pqxx::row::size_type col = 0; col < row.size(); ++col)
-                    n.push_back(row[col].as<int>());
+                const auto &col = column_name[i];
+
+                string query = "SELECT " + col + " FROM habits WHERE date_ymd = CURRENT_DATE";
+
+                pqxx::work txnc(conn);
+                pqxx::result resultc = txnc.exec(query);
+                txnc.commit();
+
+                if (!resultc.empty() && !resultc[0][0].is_null())
+                {
+                    int temp = resultc[0][0].as<int>();
+                    n.push_back(temp);
+                }
             }
 
             // -----------------------------today's data extraction
 
             pqxx::work day_count(conn);
-            pqxx::result dc = day_count.exec("SELECT COUNT(*) FROM (SELECT date_ymd, (SELECT SUM((value::text)::integer) FROM jsonb_each_text(to_jsonb(h) - 'date_ymd')) " 
-                                                "AS sum_values FROM habits h) subquery WHERE sum_values > 0");
+            pqxx::result dc = day_count.exec("SELECT COUNT(*) FROM (SELECT date_ymd, (SELECT SUM((value::text)::integer) FROM jsonb_each_text(to_jsonb(h) - 'date_ymd')) "
+                                             "AS sum_values FROM habits h) subquery WHERE sum_values > 0");
             day_count.commit();
 
             int d_c = dc[0][0].as<int>();
